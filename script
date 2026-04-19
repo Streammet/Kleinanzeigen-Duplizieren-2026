@@ -1,0 +1,97 @@
+// ==UserScript==
+// @name          Kleinanzeigen - Anzeige duplizieren
+// @namespace     https://github.com/Streammet
+// @description   Bietet eine "Anzeige duplizieren" Funktion beim Bearbeiten einer vorhandenen Anzeige in Kleinanzeigen.
+// @icon          https://www.google.com/s2/favicons?domain=kleinanzeigen.de
+// @copyright     2026, Streammet (https://github.com/Streammet)
+// @license       MIT
+// @version       1.0.5
+// @author        Streammet (based on original by J05HI)
+// @match         https://www.kleinanzeigen.de/p-anzeige-bearbeiten.html*
+// @match         https://kleinanzeigen.de/p-anzeige-bearbeiten.html*
+// @grant         none
+// @run-at        document-idle
+// ==/UserScript==
+
+(function () {
+    'use strict';
+
+    const DUP_BTN_ID = 'ka-dup-duplicate-btn';
+
+    function findSaveButton() {
+        return Array.from(document.querySelectorAll('button')).find(function (btn) {
+            return btn.textContent.trim() === 'Anzeige speichern';
+        }) || null;
+    }
+
+    function clearAdId() {
+        var input = document.querySelector('#postad-id, input[name="adId"], input[name="postad-id"]');
+        if (input) {
+            input.removeAttribute('name');
+            var setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+            setter.call(input, '');
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+
+    function createDupButton() {
+        var btn = document.createElement('button');
+        btn.id = DUP_BTN_ID;
+        btn.type = 'button';
+        btn.textContent = 'Anzeige duplizieren';
+        btn.style.cssText = [
+            'margin-left:10px',
+            'padding:0 20px',
+            'height:44px',
+            'min-height:44px',
+            'background-color:#b5e941',
+            'color:#333',
+            'border:2px solid #9acc30',
+            'border-radius:999px',
+            'font-size:14px',
+            'font-weight:600',
+            'cursor:pointer',
+            'white-space:nowrap',
+            'vertical-align:middle',
+            'flex-shrink:0',
+        ].join(';');
+
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            btn.disabled = true;
+            btn.textContent = '⏳ Wird dupliziert…';
+            clearAdId();
+            setTimeout(function () {
+                var saveBtn = findSaveButton();
+                if (saveBtn) {
+                    saveBtn.click();
+                } else {
+                    btn.disabled = false;
+                    btn.textContent = 'Anzeige duplizieren';
+                }
+            }, 300);
+        });
+
+        return btn;
+    }
+
+    function injectButton() {
+        if (document.getElementById(DUP_BTN_ID)) return;
+
+        var saveBtn = findSaveButton();
+        if (!saveBtn) return;
+
+        saveBtn.insertAdjacentElement('afterend', createDupButton());
+    }
+
+    var observer = new MutationObserver(function () {
+        injectButton();
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    injectButton();
+
+})();
