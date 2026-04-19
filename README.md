@@ -1,4 +1,4 @@
-# Kleinanzeigen - Anzeige duplizieren
+# (Ebay) Kleinanzeigen - Anzeige duplizieren
 
 Ein Tampermonkey-Userscript, das eine **„Anzeige duplizieren"**-Funktion auf kleinanzeigen.de hinzufügt.
 
